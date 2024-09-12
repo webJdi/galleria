@@ -4,7 +4,24 @@ import { useState } from "react";
 import { storage, db } from "./firebase";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { collection, addDoc } from "firebase/firestore";
-import {Box, Button} from '@mui/material';
+import {Box, Button, Typography, LinearProgress} from '@mui/material';
+
+
+function LinearProgressWithLabel(props) {
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+      <Box sx={{ width: '100%', mr: 1 }}>
+        <LinearProgress variant="determinate" {...props} />
+      </Box>
+      <Box sx={{ minWidth: 35 }}>
+        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+          {`${Math.round(props.value)}%`}
+        </Typography>
+      </Box>
+    </Box>
+  );
+}
+
 
 export default function UploadPhoto() {
   const [file, setFile] = useState(null);
@@ -48,26 +65,101 @@ export default function UploadPhoto() {
     );
   };
 
-  const col1 = "#"
-  const col2 = "#"
-  const col3 = "#"
-  const col4 = "#"
-  const col5 = "#"
+  const col1 = "#2F2235";
+  const col2 = "#3F3244";
+  const col3 = "#60495A";
+  const col4 = "#A9ACA9";
+  const col5 = "#BFC3BA";
 
   return (
     <Box
       width={'100vw'}
       height={'100vh'}
       bgcolor={col1}
+      display={'flex'}
+      justifyContent={'center'}
+      alignContent={'center'}
+      flexDirection={'column'}
     >
+      <Typography
+        variant="h2"
+        textAlign={'center'}
+      >
+        Galleria
+      </Typography>
+      <Box
+      position={'fixed'}
+      top={'2vh'}
+      right={'2vh'}
+      >
+          <Button
+          href="/gallery"
+          sx={{background:col5,
+            color:col1
+          }}
+        >
+          Gallery
+        </Button>
+      </Box>
+      
+      <Box
+        width={'80vw'}
+        height={'60vh'}
+        margin={'0 auto'}
+        bgcolor={col2}
+        display={'flex'}
+        flexDirection={'column'}
+        padding={'2em'}
+      >
+        <Typography
+          variant={'h4'}
+          color={'col5'}
+          textAlign={'center'}
+          margin={'1em'}
+        >
+          Share your photos
+        </Typography>
+        <Box
+          bgcolor={col3}
+          width={'50vw'}
+          height={'40vh'}
+          margin={'0 auto'}
+          display={'flex'}
+          justifyContent={'space-between'}
+          flexDirection={'column'}
+        >
+        <input type="file" onChange={handleFileChange} margin='1em'/>
+        <Box
+          width={'10vw'}
+          margin={'1em auto'}
+        >
+        <Button
+          size="small"
 
+          variant="contained"
+          onClick={handleUpload}
+          margin={'1em auto'}
+          sx={{background:col2,
+            '&:hover':
+            {
+              background:col4,
+              color:col1
+            }
+          }}
+        >
+          Upload
+        </Button>
+        </Box>
+        <LinearProgressWithLabel value={uploadProgress} />
+        </Box>
+        
+        
+        <Box>
+        
+        </Box>
+
+        
+      </Box>
     </Box>
-    <div>
-      <h2>Upload Photo</h2>
-      <input type="file" onChange={handleFileChange} />
-      <button onClick={handleUpload}>Upload</button>
-      <div>Upload Progress: {uploadProgress}%</div>
-      {photoURL && <img src={photoURL} alt="Uploaded" style={{ width: "300px" }} />}
-    </div>
   );
 }
