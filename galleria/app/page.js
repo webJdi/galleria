@@ -1,95 +1,73 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
 
-export default function Home() {
+import { useState } from "react";
+import { storage, db } from "./firebase";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { collection, addDoc } from "firebase/firestore";
+import {Box, Button} from '@mui/material';
+
+export default function UploadPhoto() {
+  const [file, setFile] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [photoURL, setPhotoURL] = useState("");
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
+
+  const handleUpload = async () => {
+    if (!file) return;
+
+    const storageRef = ref(storage, `photos/${file.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setUploadProgress(progress);
+      },
+      (error) => {
+        console.error("Upload failed:", error);
+      },
+      async () => {
+        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+        setPhotoURL(downloadURL);
+
+        // Save the photo URL to Firestore
+        try {
+          await addDoc(collection(db, "photos"), {
+            url: downloadURL,
+            createdAt: new Date(),
+          });
+          console.log("Photo URL saved to Firestore");
+        } catch (error) {
+          console.error("Error saving to Firestore:", error);
+        }
+      }
+    );
+  };
+
+  const col1 = "#"
+  const col2 = "#"
+  const col3 = "#"
+  const col4 = "#"
+  const col5 = "#"
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>app/page.js</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <Box
+      width={'100vw'}
+      height={'100vh'}
+      bgcolor={col1}
+    >
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+    </Box>
+    <div>
+      <h2>Upload Photo</h2>
+      <input type="file" onChange={handleFileChange} />
+      <button onClick={handleUpload}>Upload</button>
+      <div>Upload Progress: {uploadProgress}%</div>
+      {photoURL && <img src={photoURL} alt="Uploaded" style={{ width: "300px" }} />}
     </div>
   );
 }
